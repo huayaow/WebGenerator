@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Generation main -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="wayne">
+    
+<title>Generation</title>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+
+<style type="text/css">
+    body {
+	    padding-top: 20px;
+	    padding-bottom: 40px;
+    }
+
+     /* Custom table color */  
+     .table-striped tbody > tr:nth-child(odd) > td,
+     .table-striped tbody > tr:nth-child(odd) > th {
+         background-color: #b8e7ff;
+     }
+      /* Custon link color */
+     .nav-tabs > li > a {
+         color: #666666 ;
+     } 
+     .nav-tabs > .active > a {
+         color: #000000 ;
+     }
+</style>
+<link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+
+<script type="text/javascript">
+function addRow() {
+	var par = document.getElementById("parinput").value;
+	var val = document.getElementById("valinput").value;
+	var valarray = val.split(",");
+	var thislen = valarray.length + 1;
+	
+	// par1 , v1 , v2 ; ... / par2 , v1 , ...
+	var tp = document.getElementById("rawdata").value ;
+	document.getElementById("rawdata").value = tp + ";" + par + "," + valarray ; 
+	
+	var r_now = document.getElementById("ctable").rows.length ;
+	// check old rows 
+	for(var p=0; p<r_now; p++) {
+		var pc = document.getElementById("ctable").rows.item(p).cells.length ;
+		if( valarray.length+1 > pc ) {
+			for(var k=pc; k<valarray.length+1; k++) {
+				var cell = document.getElementById("ctable").rows[p].insertCell(k) ;
+				cell.innerHTML = "" ;
+			}
+		}
+		if( thislen < pc ) {
+			thislen = pc ;
+		}
+	}
+	// insert a new row 
+	var x = document.getElementById('ctable').insertRow(r_now) ;  
+	var y = x.insertCell(0) ;  // add par 
+	y.innerHTML = par ;
+    // add vals 
+	for(var i=1; i<valarray.length+1 ; i++) {
+		y = x.insertCell(i);
+		y.innerHTML = valarray[i-1] ;
+	}
+	for(var j=valarray.length+1; j<thislen; j++) {
+		y = x.insertCell(j);
+		y.innerHTML = "" ;
+	}
+}
+// value validation 
+function addvali() {
+	var a = document.getElementById("valinput").value;
+	a = a.replace(/\s+/g, "");
+	var ar = a.split(",");
+	for(var k=0; k<ar.length; k++) {
+	    if(ar[k] == "" ) {
+	    	$('#addModal').modal('show') ;	
+	    	return false ;
+	    }
+	}
+	addRow();
+	return true ;
+}
+// tway validation 
+function valiform() {
+	var re = new RegExp("^[0-9]*[1-9][0-9]*$") ;
+	var i = document.getElementById("tway").value ;
+	var r = parseInt(document.getElementById("ctable").rows.length) ;
+	
+	if( i.match(re)==null || parseInt(i) > r ) {
+		$('#nextModal').modal('show') ;
+		return false ;
+	}
+	return true ;
+}
+</script>
+
+
+</head>
+<body>
+
+<!-- nav -->      
+<div class="navbar navbar-fixed-top navbar-static-top navbar-inverse">
+<div class="navbar-inner">
+<div class="container">
+     <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+     </button>
+    
+    <!-- <a class="brand" href="#">Sig CT</a> -->
+    <div class="nav-collapse collapse">
+        <ul class="nav">
+        <li class="dropdown active">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Generation</strong><b class="caret"></b></a>
+        <ul class="dropdown-menu">
+        <li class="active"><a href="#">Generation</a></li>
+        <li><a href="#">Location</a></li>
+        <li><a href="#">Application</a></li>
+        <li><a href="/CombPublication">Publication</a></li>
+        <!--  <li class="divider"></li>
+        <li class="nav-header">Nav header</li> -->
+        </ul>
+    </li>
+    </ul>
+    
+    <ul class="nav pull-right">
+    <li><a href="/"><strong>Home</strong></a></li>
+    <li><a href="/group.html"><strong>Group</strong></a></li>
+    <li><a href="/contact.html"><strong>Contact</strong></a></li>
+    <li><a href="#"><strong>About</strong></a></li>
+    </ul>
+    </div>
+</div>
+</div>
+</div>
+
+
+<div class="container">
+    <br/><br/>
+    <br/><br/>
+    
+    <!--  <ul class="nav nav-tabs">
+       <li class="active"><a href="#">Generation</a></li>
+       <li><a href="#">Location</a></li>
+       <li><a href="#">Application</a></li>
+       <li><a href="/CombPublication">Publication</a></li>
+    </ul> -->
+    
+    <div class="row-fluid">
+        <!-- step description -->
+        <div class="span2">
+        <ul class="nav nav-list">
+            <li class="nav-header">Step</li>
+            <li class="active"><a href="#">Set SUT</a></li> 
+            <li>Set Algorithm</li>
+            <li>Covering Array</li>
+        </ul>
+        </div>
+
+        <div class="span10">       
+           <!-- input form -->                          
+           <form class="well well-large">
+               <label>Parameter</label>
+               <input type="text" id="parinput" class="span5" placeholder="e.g 'Operation System'">
+               <label>Values</label>
+               <input type="text" id="valinput" class="span12" placeholder="e.g 'Windows, Max, Linux'">
+               <br/>
+               <button type="button" class="btn" onClick="return addvali();">Add</button>
+           </form>
+             
+           
+           <form name="subform" class="well weill-large" action="algorithm.jsp" method="post">
+               <label>Coverage strength</label>
+               <input type="text" name="tway" id="tway" class="input-large" placeholder="e.g '2'">
+               <input type="hidden" name="rawdata" id="rawdata" value="">
+               <br/>
+               <button type="submit" class="btn btn btn-primary" onClick="return valiform();">Next</button>
+           </form>
+          
+          <!-- table -->
+          <table id="ctable" class="table table-striped">
+          <!--  
+          <thead><tr><th>Parameter</th><th>Values</th></tr></thead>
+          <tbody>
+          </tbody>
+          -->
+          </table>
+        </div>
+    </div>
+
+    <hr>
+    <div class="footer">
+      <p>&copy; Company 2012</p>
+    </div>
+    
+</div> <!-- /container -->
+
+<!-- modal -->
+<div class="modal hide fade" id="addModal">
+  <div class="modal-header">
+    <h3>Attention</h3>
+  </div>
+  <div class="modal-body">
+    <p>The Parameter Value is not correct, please check your input.</p>
+    <p>Example: Value1,Value2,Value3,...</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn btn btn-danger" data-dismiss="modal">OK</a>
+  </div>
+</div>
+
+
+<div class="modal hide fade" id="nextModal">
+  <div class="modal-header">
+    <h3>Attention</h3>
+  </div>
+  <div class="modal-body">
+    <p>The value of t-way is not correct, please check your input.</p>
+    <p>t-way is limited to a positive integer which is less than the number of parameters.</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn btn btn-danger" data-dismiss="modal">OK</a>
+  </div>
+</div>
+
+<script src="js/jquery-1.8.3.js"></script>
+<script src="js/bootstrap.js"></script>
+<script src="js/bootstrap-modal.js"></script>
+</body>
+</html>
