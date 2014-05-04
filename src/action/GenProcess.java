@@ -84,7 +84,6 @@ public class GenProcess extends ActionSupport implements SessionAware {
 		*/
 
 		// run
-
 		StandardPSO pso = new StandardPSO(sut.getPara_num(),sut.getVal_num(),sut.getTway(),ALG.pso_config);
 		pso.PSOEvolve();
 

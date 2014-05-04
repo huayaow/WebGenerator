@@ -18,6 +18,7 @@ public class StandardPSO {
 	private int parameter ;
 	private int[] value ;
 	private int tway ;
+    private ArrayList<int[]> seed ;
 	private Configuration config ;
 	private Combinations comb ;
 
@@ -29,6 +30,7 @@ public class StandardPSO {
 		comb = new Combinations(parameter,value,tway);
 		CoverArray = new ArrayList<int[]>() ;
 		CovNum = new ArrayList<Integer>() ;
+        seed = new ArrayList<int[]>() ;
 	}
 
 	public ArrayList<int[]> getCoverArray() {
@@ -43,6 +45,45 @@ public class StandardPSO {
 	public ArrayList<Integer> getCovNum() {
 		return CovNum ;
 	}
+
+
+    /*
+     * 初始化，清空CoverArray和comb
+     */
+    public void initialization() {
+        CoverArray.clear();
+        comb.GenerateS();
+        CovMax = comb.getSCountAll() ;
+        // cover seed's t-way combinations
+        for( int k=0 ; k<seed.size() ; k++ ) {
+            int[] tp = seed.get(k) ;
+            comb.FitnessValue(tp, 1);
+        }
+    }
+
+    /*
+     * 使用PSO生成一条测试用例已覆盖最多的未覆盖t-way组合
+     * 若此时全部组合已覆盖，返回null，否则返回测试用例int[]
+     */
+    public int[] PSOGenOne() throws CloneNotSupportedException {
+        if ( comb.getSCount() == 0 ) {
+            return null ;
+        }
+        else {
+            return Evolve() ;
+        }
+    }
+
+    /*
+     * 对seed进行预处理：将seed中内容存入ArrayList<int[]> CoverArray中，并标记已对应组合为已覆盖
+     */
+    public void SetSeed( ArrayList<int[]> ss ) {
+        for(int i=0; i<ss.size(); i++) {
+            int[] tp = ss.get(i);
+            // add to seed
+            seed.add(tp);
+        }
+    }
 
 	// One-test-at-a-time
 	public void PSOEvolve() {
@@ -61,8 +102,7 @@ public class StandardPSO {
 			long time_st = System.currentTimeMillis();  
 
 			// 初始化所有未覆盖组合对
-			comb.GenerateS();
-			CovMax = comb.getSCountAll() ;
+            initialization();
 
 			// 逐一生成测试用例
 			while( comb.getSCount() != 0 )
@@ -94,13 +134,21 @@ public class StandardPSO {
 			// save to CoverArray and CovNum
 			if( tpsize < psog_size ) {
 				CoverArray.clear() ;
+                // if seed
+                if( seed.size() != 0 ) {
+                    for(int i=0; i<seed.size(); i++) {
+                        int[] tp = seed.get(i);
+                        CoverArray.add(tp);
+                    }
+                }
+                // add others
 				for( int k=0; k<tpCA.size(); k++ ) {
 					int[] ts = new int[parameter] ;
 					for( int n=0; n<parameter; n++ )
 						ts[n] = tpCA.get(k)[n] ;
 					CoverArray.add(ts);
 				}
-				psog_size = tpsize ;
+				psog_size =  seed.size() + tpsize ;
 
 				CovNum.clear();
 				CovNum = tpCN ;
@@ -176,5 +224,71 @@ public class StandardPSO {
 		return best ;
 	}
 
+
+    /*
+     * example
+     */
+    public static void main(String args[]) throws CloneNotSupportedException {
+        // 待生成覆盖表
+        int p = 4 ;
+        int[] v = {3, 3, 3, 3} ;
+        int t = 2 ;
+        // PSO参数
+        Configuration tp_con = new Configuration(1, 20, 1000, 0.9, 1.7) ;
+        // 初始化
+        StandardPSO pso = new StandardPSO(p, v, t, tp_con);
+
+        // 1.一次性生成整个覆盖表并输出
+        pso.PSOEvolve();
+        // 输出覆盖表
+        for( int k=0 ; k<pso.CoverArray.size() ; k++ ) {
+            int[] tp = pso.CoverArray.get(k) ;
+            for( int l=0 ; l<tp.length ; l++ ) {
+                System.out.print(tp[l] + " ");
+            }
+            System.out.print("\r\n");
+        }
+        System.out.println("---------------------");
+
+        // 2.设置种子，并一次性生成整个覆盖表
+        ArrayList<int[]> seed = new ArrayList<int[]>();
+        int[] s1 = {0, 0, 0, 0} ;
+        int[] s2 = {1, 1, 1, 1} ;
+        seed.add(s1);
+        seed.add(s2);
+        pso.SetSeed(seed);
+        pso.PSOEvolve();
+        // 输出覆盖表
+        for( int k=0 ; k<pso.CoverArray.size() ; k++ ) {
+            int[] tp = pso.CoverArray.get(k) ;
+            for( int l=0 ; l<tp.length ; l++ ) {
+                System.out.print(tp[l] + " ");
+            }
+            System.out.print("\r\n");
+        }
+        System.out.println("---------------------");
+
+
+        // 3.逐条生成，在调用PSOGenOne()前需要调用initialization()初始化
+        pso.initialization();
+        // 生成一条
+        int[] test = pso.PSOGenOne() ;
+        int cov = pso.comb.FitnessValue(test, 1) ; // 计算覆盖组合数，并将对应组合设置为已覆盖
+        pso.CoverArray.add(test);  // 加入覆盖表
+        for( int l=0; l<test.length ; l++ ) {
+            System.out.print(test[l] + " ");
+        }
+        System.out.print(", cover " + cov + " combinations\r\n");
+
+        // 生成一条
+        int[] test1 = pso.PSOGenOne() ;
+        cov = pso.comb.FitnessValue(test1, 1) ; // 计算覆盖组合数，并将对应组合设置为已覆盖
+        pso.CoverArray.add(test1);  // 加入覆盖表
+        for( int l=0; l<test.length ; l++ ) {
+            System.out.print(test1[l] + " ");
+        }
+        System.out.print(", cover " + cov + " combinations\r\n");
+
+    }
 
 }
