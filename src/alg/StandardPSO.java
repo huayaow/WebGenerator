@@ -89,6 +89,7 @@ public class StandardPSO {
 	public void PSOEvolve() {
 		psog_size = 999999 ;
 		psog_time = 0 ;
+        CoverArray.clear();
 
 		// 重复
 		for(int count=0; count<config.pso_repeat; count++) {
@@ -101,8 +102,14 @@ public class StandardPSO {
 
 			long time_st = System.currentTimeMillis();  
 
-			// 初始化所有未覆盖组合对
-            initialization();
+			// 初始化
+            comb.GenerateS();
+            CovMax = comb.getSCountAll() ;
+            // cover seed's t-way combinations
+            for( int k=0 ; k<seed.size() ; k++ ) {
+                int[] tp = seed.get(k) ;
+                comb.FitnessValue(tp, 1);
+            }
 
 			// 逐一生成测试用例
 			while( comb.getSCount() != 0 )
